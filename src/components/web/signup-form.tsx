@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input"
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useTransition } from "react"
 import { signupSchema } from "@/schemas/auth"
+import { authClient } from "@/lib/auth-client"
+import { toast } from "sonner"
 
 export function SignupForm() {
 
@@ -33,9 +35,25 @@ export function SignupForm() {
     validators: {
       onSubmit: signupSchema,
     },
-    onSubmit: async (values) => {
-      startTransition(() => {
-        console.log(values)
+    onSubmit: ({ value }) => {
+      startTransition(async () => {
+        await authClient.signUp.email({
+          name: value.fullName,
+          email: value.email,
+          password: value.password,
+          //callbackURL: '/dashboard',
+          fetchOptions: {
+            onSuccess: () => {
+              toast.success('Account creates successfully')
+              navigate({
+                to: '/',
+              })
+            },
+            onError: ({ error }) => {
+              toast.error(error.message)
+            },
+          },
+        })
       })
     },
   })
