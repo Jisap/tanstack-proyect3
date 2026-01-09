@@ -19,6 +19,8 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { useTransition } from "react"
 import { loginSchema } from "@/schemas/auth"
 import { useForm } from "@tanstack/react-form"
+import { authClient } from "@/lib/auth-client"
+import { toast } from "sonner"
 
 export function LoginForm() {
 
@@ -35,7 +37,24 @@ export function LoginForm() {
     },
     onSubmit: ({ value }) => {
       startTransition(async () => {
-        console.log(value)
+        startTransition(async () => {
+          await authClient.signIn.email({
+            email: value.email,
+            password: value.password,
+            //callbackURL: '/dashboard',
+            fetchOptions: {
+              onSuccess: () => {
+                toast.success('Logged in successfully')
+                navigate({
+                  to: '/',
+                })
+              },
+              onError: ({ error }) => {
+                toast.error(error.message)
+              },
+            },
+          })
+        })
       })
     }
   })
