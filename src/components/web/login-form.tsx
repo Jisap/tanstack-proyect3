@@ -37,23 +37,21 @@ export function LoginForm() {
     },
     onSubmit: ({ value }) => {
       startTransition(async () => {
-        startTransition(async () => {
-          await authClient.signIn.email({
-            email: value.email,
-            password: value.password,
-            //callbackURL: '/dashboard',
-            fetchOptions: {
-              onSuccess: () => {
-                toast.success('Logged in successfully')
-                navigate({
-                  to: '/',
-                })
-              },
-              onError: ({ error }) => {
-                toast.error(error.message)
-              },
+        await authClient.signIn.email({
+          email: value.email,
+          password: value.password,
+          //callbackURL: '/dashboard',
+          fetchOptions: {
+            onSuccess: () => {
+              toast.success('Logged in successfully')
+              navigate({
+                to: '/dashboard',
+              })
             },
-          })
+            onError: ({ error }) => {
+              toast.error(error.message)
+            },
+          },
         })
       })
     }
