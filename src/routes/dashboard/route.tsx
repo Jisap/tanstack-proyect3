@@ -7,7 +7,7 @@ import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/dashboard')({
   component: RouteComponent,
-  loader: async () => {
+  loader: async () => {                                 // Los loaders cuando se carga la 1ra vez son ssr, despues de la 1ra vez son client
     const session = await getSessionFn()
 
     return {
@@ -35,6 +35,7 @@ function RouteComponent() {
               />
             </div>
           </header>
+
           <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
             <Outlet />
           </div>
