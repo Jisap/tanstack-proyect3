@@ -19,6 +19,7 @@ import {
   TabsList,
   TabsTrigger
 } from '@/components/ui/tabs'
+import { scrapeUrlFn } from '@/data/items'
 import { bulkImportSchema, importSchema } from '@/schemas/import'
 
 import { useForm } from '@tanstack/react-form'
@@ -47,7 +48,7 @@ function RouteComponent() {
     onSubmit: ({ value }) => {
       startTransition(async () => {
         console.log(value)
-        //await scrapeUrlFn({ data: value })
+        await scrapeUrlFn({ data: value })
         toast.success('URL scraped successfully!')
       })
     },
