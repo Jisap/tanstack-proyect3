@@ -19,12 +19,12 @@ import {
   TabsList,
   TabsTrigger
 } from '@/components/ui/tabs'
-import { importSchema } from '@/schemas/import'
+import { bulkImportSchema, importSchema } from '@/schemas/import'
 
 import { useForm } from '@tanstack/react-form'
 import { createFileRoute } from '@tanstack/react-router'
 import { Globe, LinkIcon, Loader2 } from 'lucide-react'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/dashboard/import')({
@@ -33,8 +33,9 @@ export const Route = createFileRoute('/dashboard/import')({
 
 function RouteComponent() {
 
-  const [isPending, startTransition] = useTransition()
-  const [bulkIsPending, startBulkTransition] = useTransition()
+  const [isPending, startTransition] = useTransition();
+  const [bulkIsPending, startBulkTransition] = useTransition();
+  const [discoveredLinks, setDiscoveredLinks] = useState([])
 
   const form = useForm({
     defaultValues: {
@@ -50,7 +51,24 @@ function RouteComponent() {
         toast.success('URL scraped successfully!')
       })
     },
-  })
+  });
+
+  const bulkForm = useForm({
+    defaultValues: {
+      url: '',
+      search: '',
+    },
+    validators: {
+      onSubmit: bulkImportSchema,
+    },
+    onSubmit: ({ value }) => {
+      startTransition(async () => {
+        console.log(value)
+        //const data = await mapUrlFn({ data: value })
+        //setDiscoveredLinks(data)
+      })
+    },
+  });
 
 
   return (
@@ -145,6 +163,89 @@ function RouteComponent() {
                   Discover and import multiple URLs from a website at once 🚀
                 </CardDescription>
               </CardHeader>
+
+              <CardContent className='space-y-6'>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    bulkForm.handleSubmit()
+                  }}
+                >
+                  <FieldGroup>
+                    <bulkForm.Field
+                      name="url"
+                      children={(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !field.state.meta.isValid
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel htmlFor={field.name}>URL</FieldLabel>
+                            <Input
+                              id={field.name}
+                              name={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              aria-invalid={isInvalid}
+                              placeholder="https://tanstack.com/start/latest"
+                              autoComplete="off"
+                            />
+                            {isInvalid && (
+                              <FieldError errors={field.state.meta.errors} />
+                            )}
+                          </Field>
+                        )
+                      }}
+                    />
+
+                    <bulkForm.Field
+                      name="search"
+                      children={(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !field.state.meta.isValid
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel htmlFor={field.name}>
+                              Filter (optional)
+                            </FieldLabel>
+                            <Input
+                              id={field.name}
+                              name={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) =>
+                                field.handleChange(e.target.value)
+                              }
+                              aria-invalid={isInvalid}
+                              placeholder="e.g. Blog, docs, tutorial"
+                              autoComplete="off"
+                            />
+                            {isInvalid && (
+                              <FieldError errors={field.state.meta.errors} />
+                            )}
+                          </Field>
+                        )
+                      }}
+                    />
+
+                    <Button type="submit" disabled={isPending}>
+                      {isPending ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        'Import Urls'
+                      )}
+                    </Button>
+                  </FieldGroup>
+                </form>
+
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
