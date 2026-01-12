@@ -20,7 +20,7 @@ import {
   TabsList,
   TabsTrigger
 } from '@/components/ui/tabs'
-import { mapUrlFn, scrapeUrlFn } from '@/data/items'
+import { BulkScrapeProgress, bulkScrapeUrlsFn, mapUrlFn, scrapeUrlFn } from '@/data/items'
 import { bulkImportSchema, importSchema } from '@/schemas/import'
 import { type SearchResultWeb } from '@mendable/firecrawl-js'
 
@@ -39,6 +39,8 @@ function RouteComponent() {
   const [isPending, startTransition] = useTransition();
   const [bulkIsPending, startBulkTransition] = useTransition();
   const [discoveredLinks, setDiscoveredLinks] = useState<Array<SearchResultWeb>>([])
+  const [selectedUrls, setSelectedUrls] = useState<Set<string>>(new Set())
+  const [progress, setProgress] = useState<BulkScrapeProgress | null>(null)
 
   const form = useForm({
     defaultValues: {
@@ -73,8 +75,64 @@ function RouteComponent() {
     },
   });
 
-  const handleSelectAll = () => {
+  // Función para seleccionar/deseleccionar todos los enlaces
+  function handleSelectAll() {
+    if (selectedUrls.size === discoveredLinks.length) { // Si todos los enlaces están seleccionados, se deseleccionan todos
+      setSelectedUrls(new Set())
+    } else {
+      setSelectedUrls(new Set(discoveredLinks.map((link) => link.url))) // Si no están seleccionados, se seleccionan todos
+    }
+  }
 
+  // Función para seleccionar/deseleccionar un enlace
+  function handleToggleUrl(url: string) {
+    const newSelected = new Set(selectedUrls)  // Se crea una copia del set de enlaces seleccionados
+
+    if (newSelected.has(url)) {                // Si el enlace está seleccionado, se deselecciona
+      newSelected.delete(url)
+    } else {
+      newSelected.add(url)                     // Si el enlace no está seleccionado, se selecciona
+    }
+
+    setSelectedUrls(newSelected)               // Se actualiza el set de enlaces seleccionados
+  }
+
+  function handleBulkImport() {
+    startBulkTransition(async () => {
+      if (selectedUrls.size === 0) {
+        toast.error('Please select at least one URL to import.')
+        return
+      }
+
+      setProgress({
+        completed: 0,
+        total: selectedUrls.size,
+        url: '',
+        status: 'success',
+      })
+      let successCount = 0
+      let failedCount = 0
+
+      for await (const update of await bulkScrapeUrlsFn({ // Consumimos el generador de valores emitidos por bulkScrapeUrlsFn. 
+        data: { urls: Array.from(selectedUrls) },         // update es el nombre de cada valor recibido 
+      })) {
+        setProgress(update)
+
+        if (update.status === 'success') {
+          successCount++
+        } else {
+          failedCount++
+        }
+      }
+
+      setProgress(null)
+
+      if (failedCount > 0) {
+        toast.success(`Imported ${successCount} Urls (${failedCount} failed)`)
+      } else {
+        toast.success(`Successfully imported ${successCount} URLs`)
+      }
+    })
   }
 
 
@@ -265,10 +323,10 @@ function RouteComponent() {
                         variant="outline"
                         size="sm"
                       >
-                        {/* {selectedUrls.size === discoveredLinks.length
+                        {selectedUrls.size === discoveredLinks.length
                           ? 'Deselect All'
-                          : 'Select All'} */}
-                        Select All
+                          : 'Select All'
+                        }
                       </Button>
                     </div>
 
@@ -277,6 +335,8 @@ function RouteComponent() {
                         <label key={link.url} className="hover:bg-muted/50 flex cursor-pointer items-start gap-3 rounded-md p-2">
                           <Checkbox
                             className="mt-0.5"
+                            checked={selectedUrls.has(link.url)}
+                            onCheckedChange={() => handleToggleUrl(link.url)}
                           />
 
                           <div className="min-w-0 flex-1">
@@ -297,9 +357,21 @@ function RouteComponent() {
                     </div>
 
                     <Button
-                      className='w-full'
+                      disabled={bulkIsPending}
+                      onClick={handleBulkImport}
+                      className="w-full"
+                      type="button"
                     >
-                      Import
+                      {bulkIsPending ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          {progress
+                            ? `Importing ${progress.completed}/${progress.total}...`
+                            : 'Starting...'}
+                        </>
+                      ) : (
+                        `Import ${selectedUrls.size} URLs`
+                      )}
                     </Button>
                   </div>
                 )}
