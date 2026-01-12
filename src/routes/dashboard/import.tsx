@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Field,
   FieldError,
@@ -19,8 +20,9 @@ import {
   TabsList,
   TabsTrigger
 } from '@/components/ui/tabs'
-import { scrapeUrlFn } from '@/data/items'
+import { mapUrlFn, scrapeUrlFn } from '@/data/items'
 import { bulkImportSchema, importSchema } from '@/schemas/import'
+import { type SearchResultWeb } from '@mendable/firecrawl-js'
 
 import { useForm } from '@tanstack/react-form'
 import { createFileRoute } from '@tanstack/react-router'
@@ -36,7 +38,7 @@ function RouteComponent() {
 
   const [isPending, startTransition] = useTransition();
   const [bulkIsPending, startBulkTransition] = useTransition();
-  const [discoveredLinks, setDiscoveredLinks] = useState([])
+  const [discoveredLinks, setDiscoveredLinks] = useState<Array<SearchResultWeb>>([])
 
   const form = useForm({
     defaultValues: {
@@ -65,11 +67,15 @@ function RouteComponent() {
     onSubmit: ({ value }) => {
       startTransition(async () => {
         console.log(value)
-        //const data = await mapUrlFn({ data: value })
-        //setDiscoveredLinks(data)
+        const data = await mapUrlFn({ data: value })
+        setDiscoveredLinks(data)
       })
     },
   });
+
+  const handleSelectAll = () => {
+
+  }
 
 
   return (
@@ -245,6 +251,59 @@ function RouteComponent() {
                     </Button>
                   </FieldGroup>
                 </form>
+
+                {/* Discovered URLs list */}
+                {discoveredLinks.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">
+                        Found {discoveredLinks.length} URLs
+                      </p>
+
+                      <Button
+                        onClick={handleSelectAll}
+                        variant="outline"
+                        size="sm"
+                      >
+                        {/* {selectedUrls.size === discoveredLinks.length
+                          ? 'Deselect All'
+                          : 'Select All'} */}
+                        Select All
+                      </Button>
+                    </div>
+
+                    <div className="max-h-80 space-y-2 overflow-y-auto rounded-md border p-4">
+                      {discoveredLinks.map((link) => (
+                        <label key={link.url} className="hover:bg-muted/50 flex cursor-pointer items-start gap-3 rounded-md p-2">
+                          <Checkbox
+                            className="mt-0.5"
+                          />
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {link.title ?? 'Title has not been found'}
+                            </p>
+
+                            <p className="text-muted-foreground truncate text-xs">
+                              {link.description ??
+                                'Description has not been found'}
+                            </p>
+                            <p className="text-muted-foreground truncate text-xs">
+                              {link.url}
+                            </p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+
+                    <Button
+                      className='w-full'
+                    >
+                      Import
+                    </Button>
+                  </div>
+                )}
+
 
               </CardContent>
             </Card>
