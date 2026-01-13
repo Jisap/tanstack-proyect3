@@ -10,8 +10,9 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Copy, Inbox } from 'lucide-react'
 import z from 'zod'
 import { zodValidator } from '@tanstack/zod-adapter'
-import { use, useEffect, useState } from 'react'
+import { Suspense, use, useEffect, useState } from 'react'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Skeleton } from '@/components/ui/skeleton'
 
 
 // Search and Filter schema
@@ -152,6 +153,30 @@ function ItemList({
   )
 }
 
+function ItemsGridSkeleton() {
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      {[1, 2, 3, 4].map((i) => (
+        <Card key={i} className="overflow-hidden pt-0">
+          <Skeleton className="aspect-video w-full" />
+          <CardHeader className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="size-8 rounded-md" />
+            </div>
+
+            {/* Title */}
+            <Skeleton className="h-6 w-full" />
+
+            {/* Author  */}
+            <Skeleton className="h-4 w-40" />
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
 
 function RouteComponent() {
 
@@ -167,7 +192,7 @@ function RouteComponent() {
 
     const timeoutId = setTimeout(() => {                              // Pero sino lo es ejecutamos un timeout
       navigate({ search: (prev) => ({ ...prev, q: searchInput }) })   // que navega a la URL con el nuevo searchParam
-    }, 300)
+    }, 500)
 
     return () => clearTimeout(timeoutId)
   }, [searchInput, navigate, q]);
@@ -219,10 +244,12 @@ function RouteComponent() {
         </Select>
       </div>
 
-      <ItemList
-        q={q} status={status}
-        data={itemsPromise}
-      />
+      <Suspense fallback={<ItemsGridSkeleton />}>
+        <ItemList
+          q={q} status={status}
+          data={itemsPromise}
+        />
+      </Suspense>
     </div>
   )
 }
