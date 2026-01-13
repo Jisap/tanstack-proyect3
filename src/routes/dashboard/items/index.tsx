@@ -6,18 +6,58 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getItemsFn } from '@/data/items'
 import { ItemStatus } from '@/generated/prisma/enums'
 import { copyToClipboard } from '@/lib/clipboard'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Copy } from 'lucide-react'
+import z from 'zod'
+import { zodValidator } from '@tanstack/zod-adapter'
+import { useEffect, useState } from 'react'
+
+
+// Search and Filter schema
+const itemsSearchSchema = z.object({
+  q: z.string().default(''),
+  status: z.union([z.literal('all'), z.nativeEnum(ItemStatus)]).default('all'),
+})
 
 
 export const Route = createFileRoute('/dashboard/items/')({
   component: RouteComponent,
-  loader: () => getItemsFn()
+  loader: () => getItemsFn(),
+  validateSearch: zodValidator(itemsSearchSchema),   // Añade validación al search y valores por defecto incrustrando en la url los searchParams
 })
 
 function RouteComponent() {
 
-  const data = Route.useLoaderData()
+  const navigate = useNavigate({ from: Route.fullPath });             // Navigate actualiza la URL de la página. {from: Route.fullPath} Cualquier navegación que se haga con esta función navigate debe considerarse como si se originara desde la ruta /dashboard/items/".
+  const data = Route.useLoaderData()                                  // Obtiene los datos del loader
+  const { q, status } = Route.useSearch();                            // Obtiene los searchParams de la URL
+  const [searchInput, setSearchInput] = useState(q);                  // Estado para controlar el input de búsqueda
+
+  // Cuando el input cambia se actualiza el searchParam 
+  // de la URL con el nuevo searchParam
+  useEffect(() => {
+    if (searchInput === q) return                                     // Si el valor del input es igual al searchParam no hace nada
+
+    const timeoutId = setTimeout(() => {                              // Pero sino lo es ejecutamos un timeout
+      navigate({ search: (prev) => ({ ...prev, q: searchInput }) })   // que navega a la URL con el nuevo searchParam
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchInput, navigate, q]);
+
+  //Filtrado de items
+  const filteredItems = data.filter((item) => {
+    // Filtramos los items según el searchParam q 
+    const matchesQuery =                                                    // Si el searchParam q es igual a '' 
+      q === '' ||
+      item.title?.toLowerCase().includes(q.toLowerCase()) ||                // o el título  
+      item.tags.some((tag) => tag.toLowerCase().includes(q.toLowerCase()))  // o alguna de las etiquetas del item contiene el searchParam q
+
+    // Filter by status
+    const matchesStatus = status === 'all' || item.status === status
+
+    return matchesQuery && matchesStatus
+  })
 
 
   return (
@@ -32,11 +72,23 @@ function RouteComponent() {
       {/* Search and Filter controls */}
       <div className='flex gap-4'>
         <Input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search by title or tags"
           className=""
         />
 
-        <Select>
+        <Select
+          value={status}
+          onValueChange={(value) =>
+            navigate({
+              search: (prev) => ({
+                ...prev,
+                status: value as typeof status,
+              }),
+            })
+          }
+        >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -53,7 +105,7 @@ function RouteComponent() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {data.map((item) => (
+        {filteredItems.map((item) => (
           <Card key={item.id} className="group overflow-hidden transition-all hover:shadow-lg pt-0">
             <Link to="/dashboard" className='block'>
               {item.ogImage && (
