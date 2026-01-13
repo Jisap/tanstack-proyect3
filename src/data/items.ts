@@ -182,6 +182,23 @@ export const bulkScrapeUrlsFn = createServerFn({ method: 'POST' })
 
       yield progress // Se emite un evento AL FINAL de cada vuelta del bucle que será recogido por el cliente
     }
+  });
+
+export const getItemsFn = createServerFn({ method: 'GET' })
+  .middleware([authFnMiddleware])
+  .handler(async ({ context }) => {
+    //await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    const items = await prisma.savedItem.findMany({
+      where: {
+        userId: context.session.user.id,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    return items
   })
 
 
