@@ -11,18 +11,17 @@ import { useState } from 'react'
 export const Route = createFileRoute('/dashboard/items/$itemId')({
   component: RouteComponent,
   loader: ({ params }) => getItemById({ data: { id: params.itemId } }),
-  //head: ({ loaderData }) => {
-  // const title = loaderData?.title ?? 'Item Details'
-  // const description =
-  //   loaderData?.summary ??
-  //   'View saved article details and AI-generated summary'
-  // const image = loaderData?.ogImage
-
-  // return {
-  //   title,
-  //   description,
-  //   image,
-  // }
+  head: ({ loaderData }) => {
+    const title = loaderData?.title ?? 'Item Details'
+    const image = loaderData?.ogImage ?? "ogImage"
+    return {
+      meta: [
+        { title },
+        { property: 'og:image', content: image },
+        { name: 'twitter:title', content: title }
+      ]
+    }
+  }
 })
 
 function RouteComponent() {
