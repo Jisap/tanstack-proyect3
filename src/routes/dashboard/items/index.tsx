@@ -192,7 +192,7 @@ function RouteComponent() {
 
     const timeoutId = setTimeout(() => {                              // Pero sino lo es ejecutamos un timeout
       navigate({ search: (prev) => ({ ...prev, q: searchInput }) })   // que navega a la URL con el nuevo searchParam
-    }, 500)
+    }, 700)
 
     return () => clearTimeout(timeoutId)
   }, [searchInput, navigate, q]);
