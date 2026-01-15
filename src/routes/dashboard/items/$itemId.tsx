@@ -6,9 +6,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { getItemById, saveSummaryAndGenerateTagsFn } from '@/data/items'
 import { cn } from '@/lib/utils'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, Badge, Calendar, ChevronDown, Clock, ExternalLink, Loader2, Sparkles, User } from 'lucide-react'
+import { ArrowLeft, Calendar, ChevronDown, Clock, ExternalLink, Loader2, Sparkles, User } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/dashboard/items/$itemId')({
   component: RouteComponent,
@@ -38,13 +39,13 @@ function RouteComponent() {
     isLoading         // Indica si se está generando el resumen
   } = useCompletion({ // Se utiliza el hook useCompletion para manejar la generación de resúmenes
     api: '/api/ai/summary',
-    initialCompletion: data.summary ? data.summary : undefined,
+    initialCompletion: data.summary ? data.summary : undefined, // Si ya existe un resumen, se muestra y no se hace petición al endpoint
     streamProtocol: 'text',
     body: {
       itemId: data.id,
     },
-    onFinish: async (_prompt, completionText) => {
-      await saveSummaryAndGenerateTagsFn({
+    onFinish: async (_prompt, completionText) => { // Cuando el resumen se genera 
+      await saveSummaryAndGenerateTagsFn({         // Se generán a su vez los tags y se guardan en la base de datos (tags y resumen)  
         data: {
           id: data.id,
           summary: completionText,

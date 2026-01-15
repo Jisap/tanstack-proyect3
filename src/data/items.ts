@@ -244,7 +244,7 @@ export const saveSummaryAndGenerateTagsFn = createServerFn({
       throw notFound()
     }
 
-    const { text } = await generateText({
+    const { text } = await generateText({                     // Genera los tags en base al resumen proporcionado
       model: openrouter.chat('xiaomi/mimo-v2-flash:free'),
       system: `You are a helpful assistant that extracts relevant tags from content summaries.
         Extract 3-5 short, relevant tags that categorize the content.
@@ -253,13 +253,13 @@ export const saveSummaryAndGenerateTagsFn = createServerFn({
       prompt: `Extract tags from this summary: \n\n${data.summary}`,
     })
 
-    const tags = text
+    const tags = text                                         // Procesa los tags para mostrarlos de forma separada
       .split(',')
       .map((tag) => tag.trim().toLowerCase())
       .filter((tag) => tag.length > 0)
       .slice(0, 5)
 
-    const item = await prisma.savedItem.update({
+    const item = await prisma.savedItem.update({              // Actualiza el item en la base de datos con el resumen y los tags generados
       where: {
         userId: context.session.user.id,
         id: data.id,
