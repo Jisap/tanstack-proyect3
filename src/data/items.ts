@@ -5,6 +5,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { authFnMiddleware } from "@/middlewares/auth";
 import z from "zod";
 import { notFound } from "@tanstack/react-router";
+import { generateText } from "ai";
+import { openrouter } from "@/lib/openRouter";
 
 
 
@@ -206,7 +208,7 @@ export const getItemById = createServerFn({ method: 'GET' })
   .middleware([authFnMiddleware])
   .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ context, data }) => {
-    const item = await prisma.savedItem.findUnique({
+    const item = await prisma.savedItem.findUnique({  // Busca un item en la base de datos
       where: {
         userId: context.session.user.id,
         id: data.id,
@@ -216,6 +218,57 @@ export const getItemById = createServerFn({ method: 'GET' })
     if (!item) {
       throw notFound()
     }
+
+    return item
+  });
+
+export const saveSummaryAndGenerateTagsFn = createServerFn({
+  method: 'POST',
+})
+  .middleware([authFnMiddleware])
+  .inputValidator(
+    z.object({
+      id: z.string(),
+      summary: z.string(),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    const existing = await prisma.savedItem.findUnique({  // Busca un item en la base de datos
+      where: {
+        id: data.id,
+        userId: context.session.user.id,
+      },
+    })
+
+    if (!existing) {
+      throw notFound()
+    }
+
+    const { text } = await generateText({
+      model: openrouter.chat('xiaomi/mimo-v2-flash:free'),
+      system: `You are a helpful assistant that extracts relevant tags from content summaries.
+        Extract 3-5 short, relevant tags that categorize the content.
+        Return ONLY a comma-separated list of tags, nothing else.
+        Example: technology, programming, web development, javascript`,
+      prompt: `Extract tags from this summary: \n\n${data.summary}`,
+    })
+
+    const tags = text
+      .split(',')
+      .map((tag) => tag.trim().toLowerCase())
+      .filter((tag) => tag.length > 0)
+      .slice(0, 5)
+
+    const item = await prisma.savedItem.update({
+      where: {
+        userId: context.session.user.id,
+        id: data.id,
+      },
+      data: {
+        summary: data.summary,
+        tags: tags,
+      },
+    })
 
     return item
   })

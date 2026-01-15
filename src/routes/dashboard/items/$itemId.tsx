@@ -1,12 +1,14 @@
+import { useCompletion } from '@ai-sdk/react'
 import { MessageResponse } from '@/components/ai-elements/message'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { getItemById } from '@/data/items'
+import { getItemById, saveSummaryAndGenerateTagsFn } from '@/data/items'
 import { cn } from '@/lib/utils'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { ArrowLeft, Badge, Calendar, ChevronDown, Clock, ExternalLink, User } from 'lucide-react'
+import { ArrowLeft, Badge, Calendar, ChevronDown, Clock, ExternalLink, Loader2, Sparkles, User } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 export const Route = createFileRoute('/dashboard/items/$itemId')({
   component: RouteComponent,
@@ -29,6 +31,42 @@ function RouteComponent() {
   const data = Route.useLoaderData();
   const [contentOpen, setContentOpen] = useState(false)
   const router = useRouter();
+
+  const {
+    completion,       // Resultado de la generación del resumen
+    complete,         // Se usa para ejecutar la función del endpoint
+    isLoading         // Indica si se está generando el resumen
+  } = useCompletion({ // Se utiliza el hook useCompletion para manejar la generación de resúmenes
+    api: '/api/ai/summary',
+    initialCompletion: data.summary ? data.summary : undefined,
+    streamProtocol: 'text',
+    body: {
+      itemId: data.id,
+    },
+    onFinish: async (_prompt, completionText) => {
+      await saveSummaryAndGenerateTagsFn({
+        data: {
+          id: data.id,
+          summary: completionText,
+        },
+      })
+
+      toast.success('Summary generated and saved!')
+      router.invalidate()
+    },
+    onError: (error) => {
+      toast.error(error.message)
+    },
+  });
+
+  function handleGenerateSummary() {
+    if (!data.content) {
+      toast.error('No content available to summarize')
+      return
+    }
+
+    complete(data.content)
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 w-full">
@@ -101,7 +139,49 @@ function RouteComponent() {
         )}
 
         {/* Summary */}
-        {/* TODO: implement */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-primary mb-3">
+                  Summary
+                </h2>
+
+                {/* Si hay un resumen generado o guardado, se muestra */}
+                {completion || data.summary ? (
+                  <MessageResponse>{completion}</MessageResponse>
+                ) : (
+                  <p className="text-muted-foreground italic">
+                    {data.content
+                      ? 'No summary yet. Generate one with AI.'
+                      : 'No content available to summarize.'}
+                  </p>
+                )}
+              </div>
+
+              {/* Si hay contenido pero no hay resumen, se muestra el botón */}
+              {data.content && !data.summary && (
+                <Button
+                  onClick={handleGenerateSummary}
+                  disabled={isLoading}
+                  size="sm"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Content Section */}
         {data.content && (
