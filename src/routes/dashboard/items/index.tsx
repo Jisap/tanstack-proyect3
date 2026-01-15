@@ -28,6 +28,22 @@ export const Route = createFileRoute('/dashboard/items/')({
   component: RouteComponent,
   loader: () => ({ itemsPromise: getItemsFn() }),    // getItemsFn devuelve Promise<Item[]> 
   validateSearch: zodValidator(itemsSearchSchema),   // Añade validación al search y valores por defecto incrustrando en la url los searchParams
+  head: () => ({
+    meta: [
+      { title: 'Saved Items' },
+      {
+        name: 'description',
+        content:
+          'Browse and manage your saved articles, bookmarks, and content.',
+      },
+      { property: 'og:title', content: 'Saved Items' },
+      {
+        property: 'og:description',
+        content:
+          'Browse and manage your saved articles, bookmarks, and content.',
+      },
+    ]
+  })
 });
 
 function ItemList({
