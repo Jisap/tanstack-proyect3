@@ -352,6 +352,52 @@ function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="border-t py-8">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <img
+                src="https://tanstack.com/images/logos/logo-color-600.png"
+                alt="TanStack"
+                className="h-4 w-4"
+              />
+
+              <span>Built with TanStack Start</span>
+            </div>
+
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <a
+                href="https://tanstack.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-foreground"
+              >
+                TanStack
+              </a>
+
+              <a
+                href="https://prisma.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-foreground"
+              >
+                Prisma
+              </a>
+
+              <a
+                href="https://ui.shadcn.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-foreground"
+              >
+                shadcn/ui
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }
