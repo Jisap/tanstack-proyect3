@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { searchWebFn } from '@/data/items'
+import { BulkScrapeProgress, searchWebFn } from '@/data/items'
 import { searchSchema } from '@/schemas/import'
 import { SearchResultWeb } from '@mendable/firecrawl-js'
 import { useForm } from '@tanstack/react-form'
@@ -17,7 +18,33 @@ export const Route = createFileRoute('/dashboard/discover')({
 function RouteComponent() {
 
   const [isPending, startTransition] = useTransition()
-  const [searchResults, setSearchResults] = useState<Array<SearchResultWeb>>([])
+  const [searchResults, setSearchResults] = useState<Array<SearchResultWeb>>([]);
+  const [selectedUrls, setSelectedUrls] = useState<Set<string>>(new Set())
+  const [bulkIsPending, startBulkTransition] = useTransition()
+  const [progress, setProgress] = useState<BulkScrapeProgress | null>(null)
+
+
+  // Función que selecciona/deselecciona todos los resultados
+  function handleSelectAll() {
+    if (selectedUrls.size === searchResults.length) {                      // Si el nº de urls seleccionadas = nº de resultados
+      setSelectedUrls(new Set())                                           // establecemos el estado de las url seleccionadas a un set vacio
+    } else {                                                               // sino
+      setSelectedUrls(new Set(searchResults.map((link) => link.url)))      // establecemos el estado con todas las urls que existan
+    }
+  }
+
+  // Función selecciona/deselecciona una url
+  function handleToggleUrl(url: string) {
+    const newSelected = new Set(selectedUrls)                               // Set con las urls seleccionadas
+
+    if (newSelected.has(url)) {                                             // Si el set tiene la url la borra
+      newSelected.delete(url)
+    } else {                                                                // Si el set no la tiene la añade
+      newSelected.add(url)
+    }
+
+    setSelectedUrls(newSelected)                                            // Actualizamos el estado de las urls seleccionadas
+  }
 
 
   const form = useForm({
@@ -25,17 +52,17 @@ function RouteComponent() {
       query: '',
     },
     validators: {
-      onSubmit: searchSchema,
+      onSubmit: searchSchema, // Validador para el formulario
     },
     onSubmit: ({ value }) => {
       startTransition(async () => {
-        const result = await searchWebFn({
+        const result = await searchWebFn({ // searchWebFn busca en las web el query de la busqueda utilizando firecrawl
           data: {
             query: value.query,
           },
         })
 
-        setSearchResults(result)
+        setSearchResults(result) // Guardamos los resultados en el estado (url, title, description, category)
       })
     },
   });
@@ -112,6 +139,52 @@ function RouteComponent() {
                 </Button>
               </FieldGroup>
             </form>
+
+            {/* Discovered URLs list */}
+            {searchResults.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">
+                    Found {searchResults.length} URLs
+                  </p>
+
+                  <Button onClick={handleSelectAll} variant="outline" size="sm">
+                    {selectedUrls.size === searchResults.length
+                      ? 'Deselect All'
+                      : 'Select All'}
+                  </Button>
+                </div>
+
+                <div className="max-h-80 space-y-2 overflow-y-auto rounded-md border p-4">
+                  {searchResults.map((link) => (
+                    <label
+                      key={link.url}
+                      className="hover:bg-muted/50 flex cursor-pointer items-start gap-3 rounded-md p-2"
+                    >
+                      <Checkbox
+                        checked={selectedUrls.has(link.url)}
+                        onCheckedChange={() => handleToggleUrl(link.url)}
+                        className="mt-0.5"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">
+                          {link.title ?? 'Title has not been found'}
+                        </p>
+
+                        <p className="text-muted-foreground truncate text-xs">
+                          {link.description ?? 'Description has not been found'}
+                        </p>
+                        <p className="text-muted-foreground truncate text-xs">
+                          {link.url}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+
+
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

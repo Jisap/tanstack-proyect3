@@ -278,7 +278,7 @@ export const searchWebFn = createServerFn({ method: 'POST' })
   .middleware([authFnMiddleware])
   .inputValidator(searchSchema)
   .handler(async ({ data }) => {
-    const result = await firecrawl.search(data.query, {     // Busca en la web scrapeada el query proporcionado
+    const result = await firecrawl.search(data.query, {     // Busca en la web (internet) el query proporcionado
       limit: 15,
       location: 'Germany',
       tbs: 'qdr:y',
@@ -288,7 +288,5 @@ export const searchWebFn = createServerFn({ method: 'POST' })
       url: (item as SearchResultWeb).url,
       title: (item as SearchResultWeb).title,
       description: (item as SearchResultWeb).description,
-    })) as SearchResultWeb[]
+    })) as SearchResultWeb[] ?? []
   })
-
-
