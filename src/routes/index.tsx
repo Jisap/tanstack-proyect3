@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/web/navbar";
-import { ArrowRight, BookOpen, Braces, Database, Globe, Layers, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Braces, Database, Globe, Layers, Lock, Sparkles } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -249,6 +249,56 @@ function LandingPage() {
                 </CardFooter>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Tech Stack Section */}
+      <section className="relative border-y bg-muted/30 px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-background px-4 py-1.5 text-sm text-muted-foreground">
+              <Layers className="h-4 w-4 text-primary" />
+              Tech Stack
+            </div>
+
+            <h2 className="mb-3 text-3xl font-bold tracking-tight md:text-4xl">
+              Technologies You'll Master
+            </h2>
+
+            <p className="mx-auto max-w-2xl text-muted-foreground">
+              The modern stack that powers production applications
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {techStack.map((tech, index) => {
+              const Icon = tech.icon
+              return (
+                <div
+                  key={tech.name}
+                  className="group relative overflow-hidden rounded-xl border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  {/* Subtle gradient on hover */}
+                  <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-purple-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                  <div className="relative flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-primary/10 to-purple-500/10 text-primary transition-all duration-300 group-hover:scale-110 group-hover:from-primary/20 group-hover:to-purple-500/20">
+                      <Icon className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold">{tech.name}</h3>
+
+                      <p className="text-sm text-muted-foreground">
+                        {tech.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
