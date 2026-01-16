@@ -53,7 +53,7 @@ function RouteComponent() {
       })
 
       toast.success('Summary generated and saved!')
-      router.invalidate()
+      router.invalidate(); // Se invalida el loader para que se recargue la página y se muestren los cambios tras obtener el resumen y los tags
     },
     onError: (error) => {
       toast.error(error.message)

@@ -1,12 +1,13 @@
 import { prisma } from "@/db";
 import { firecrawl } from "@/lib/firecrawl";
-import { bulkImportSchema, extractSchema, importSchema } from "@/schemas/import";
+import { bulkImportSchema, extractSchema, importSchema, searchSchema } from "@/schemas/import";
 import { createServerFn } from "@tanstack/react-start";
 import { authFnMiddleware } from "@/middlewares/auth";
 import z from "zod";
 import { notFound } from "@tanstack/react-router";
 import { generateText } from "ai";
 import { openrouter } from "@/lib/openRouter";
+import { SearchResultWeb } from "@mendable/firecrawl-js";
 
 
 
@@ -271,6 +272,23 @@ export const saveSummaryAndGenerateTagsFn = createServerFn({
     })
 
     return item
+  });
+
+export const searchWebFn = createServerFn({ method: 'POST' })
+  .middleware([authFnMiddleware])
+  .inputValidator(searchSchema)
+  .handler(async ({ data }) => {
+    const result = await firecrawl.search(data.query, {     // Busca en la web scrapeada el query proporcionado
+      limit: 15,
+      location: 'Germany',
+      tbs: 'qdr:y',
+    })
+
+    return result.web?.map((item) => ({                     // Mapea los resultados de la búsqueda
+      url: (item as SearchResultWeb).url,
+      title: (item as SearchResultWeb).title,
+      description: (item as SearchResultWeb).description,
+    })) as SearchResultWeb[]
   })
 
 
