@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/web/navbar";
-import { ArrowRight, BookOpen, Braces, Database, Globe, Layers, Lock, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Braces, Check, Database, Globe, Layers, Lock, Sparkles } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -299,6 +299,56 @@ function LandingPage() {
                 </div>
               )
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative overflow-hidden px-4 py-24">
+        {/* Background decoration */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-2xl text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-muted/50 px-4 py-1.5 text-sm text-muted-foreground">
+            <Check className="h-4 w-4 text-green-500" />
+            Free & Open Source
+          </div>
+
+          <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+            Ready to Start Building?
+          </h2>
+
+          <p className="mb-8 text-lg text-muted-foreground">
+            Jump into the tutorial and build a real-world application from
+            scratch. Learn by doing with practical, hands-on examples.
+          </p>
+
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link
+              to="/signup"
+              className={buttonVariants({
+                size: 'lg',
+                className:
+                  'group rounded-full px-8 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/25',
+              })}
+            >
+              Create Account
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+
+            <Link
+              to="/login"
+              className={buttonVariants({
+                variant: 'outline',
+                size: 'lg',
+                className:
+                  'rounded-full px-8 transition-all duration-300 hover:scale-105',
+              })}
+            >
+              Sign In
+            </Link>
           </div>
         </div>
       </section>
