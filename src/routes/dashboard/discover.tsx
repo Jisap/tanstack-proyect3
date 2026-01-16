@@ -66,7 +66,7 @@ function RouteComponent() {
       let successCount = 0                                                  // Se definen variables para scrapeos successful
       let failedCount = 0                                                   // o fallidos
 
-      for await (const update of await bulkScrapeUrlsFn({                   // update recoge el valor del progress de cada scrapeo 
+      for await (const update of await bulkScrapeUrlsFn({                   // update recoge el valor del progress de cada scrapeo. Aquí tambien se consume el generador de valores emitidos por bulkScrapeUrlsFn 
         data: { urls: Array.from(selectedUrls) },
       })) {
         setProgress(update)                                                 // Actualiza el progress conforme se scrapean las urls

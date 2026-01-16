@@ -114,7 +114,7 @@ function RouteComponent() {
       let failedCount = 0
 
       for await (const update of await bulkScrapeUrlsFn({ // Consumimos el generador de valores emitidos por bulkScrapeUrlsFn. 
-        data: { urls: Array.from(selectedUrls) },         // update es el nombre de cada valor recibido 
+        data: { urls: Array.from(selectedUrls) },         // update recoge el valor del progress de cada scrapeo 
       })) {
         setProgress(update)
 

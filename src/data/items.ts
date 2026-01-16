@@ -184,7 +184,7 @@ export const bulkScrapeUrlsFn = createServerFn({ method: 'POST' })
         status: status,
       }
 
-      yield progress // Se emite un evento AL FINAL de cada vuelta del bucle que será recogido por el cliente
+      yield progress // Se emite un evento AL FINAL de cada vuelta del bucle que será recogido por el cliente que use esta función.
     }
   });
 
